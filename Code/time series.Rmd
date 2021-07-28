@@ -1,0 +1,25 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+```{r}
+#read daily whale call data
+nw_daily<-read.csv("whale_data_nw.csv")[,-c(1)]
+se_daily<-read.csv("whale_data_se.csv")[,-c(1)]
+
+#change the count hours to recording hours if it exceeds the recording hour
+nw_daily$count[nw_daily$count>nw_daily$nb_recording_hrs]<-nw_daily$nb_recording_hrs[nw_daily$count>nw_daily$nb_recording_hrs]
+se_daily$count[se_daily$count>se_daily$nb_recording_hrs]<-se_daily$nb_recording_hrs[se_daily$count>se_daily$nb_recording_hrs]
+
+#calculate whale presence
+nw_daily$whale_presence<-nw_daily$count/nw_daily$nb_recording_hrs
+se_daily$whale_presence<-se_daily$count/se_daily$nb_recording_hrs
+```
+
+
+```{r}
+dettimeseries<-ts(subset(nw_daily,year==2002)$whale_presence)
+plot.ts(dettimeseries)
+```
+

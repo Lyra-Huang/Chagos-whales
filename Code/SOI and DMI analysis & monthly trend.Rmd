@@ -1,0 +1,134 @@
+---
+title: "SOI and DMI analysis & monthly trend"
+author: "Lyra"
+date: "20/06/2021"
+output: html_document
+---
+
+```{r}
+library(tidyverse)
+library(MASS)
+library(lme4)
+```
+
+
+```{r}
+#read daily whale call data
+nw_daily<-read.csv("nw_day.csv")[,-c(2)]
+se_daily<-read.csv("se_day.csv")[,-c(2)]
+```
+
+```{r}
+#group whale data into monthly
+nw_month<-
+  nw_daily %>%
+  group_by(year,month) %>%
+  summarise_all(funs(sum))
+
+se_month<-
+  se_daily %>%
+  group_by(year,month) %>%
+  summarise_all(funs(sum))
+
+#calculate average call per hour
+nw_month$call_ph<-nw_month$nb_calls/nw_month$nb_recording_hrs
+se_month$call_ph<-se_month$nb_calls/se_month$nb_recording_hrs
+
+```
+
+
+```{r}
+#read soi & dmi data
+macro<-read.csv("soi_dmi.csv")
+```
+
+```{r}
+#merge the calls and the environment data
+nw_macro<-merge(nw_month, macro, by.x=c("year", "month"), by.y=c("Year", "Month"))
+se_macro<-merge(se_month, macro, by.x=c("year", "month"), by.y=c("Year", "Month"))
+
+#change inf to NA for the modelling
+nw_macro[sapply(nw_macro,is.infinite)] <- NA
+se_macro[sapply(se_macro,is.infinite)] <- NA
+```
+
+
+#not working
+```{r}
+#modelling
+glm <- glm.nb (data=nw_macro,call_ph~abs(DMI))
+summary(glm)
+
+glm <- glm.nb (data=nw_macro,call_ph~abs(SOI))
+summary(glm)
+```
+
+```{r}
+#read daily whale call data
+nw_daily<-read.csv("whale_data_nw.csv")[,-c(1,2)]
+se_daily<-read.csv("whale_data_se.csv")[,-c(1,2)]
+
+#change the count hours to recording hours if it exceeds the recording hour
+nw_daily$count[nw_daily$count>nw_daily$nb_recording_hrs]<-nw_daily$nb_recording_hrs[nw_daily$count>nw_daily$nb_recording_hrs]
+se_daily$count[se_daily$count>se_daily$nb_recording_hrs]<-se_daily$nb_recording_hrs[se_daily$count>se_daily$nb_recording_hrs]
+```
+
+```{r}
+#group whale data into monthly
+nw_month<-
+  nw_daily %>%
+  group_by(year,month) %>%
+  summarise_all(funs(sum))
+
+
+se_month<-
+  se_daily %>%
+  group_by(year,month) %>%
+  summarise_all(funs(sum))
+
+#calculate whale presence
+nw_month$whale_presence<-nw_month$count/nw_month$nb_recording_hrs
+se_month$whale_presence<-se_month$count/se_month$nb_recording_hrs
+```
+
+```{r}
+#read soi & dmi data
+macro<-read.csv("soi_dmi.csv")
+```
+
+```{r}
+#merge the calls and the environment data
+nw_macro<-merge(nw_month, macro, by.x=c("year", "month"), by.y=c("Year", "Month"))
+se_macro<-merge(se_month, macro, by.x=c("year", "month"), by.y=c("Year", "Month"))
+
+#change inf to NA for the modelling
+nw_macro[sapply(nw_macro,is.infinite)] <- NA
+se_macro[sapply(se_macro,is.infinite)] <- NA
+```
+
+```{r}
+glm <- glmer(data=nw_macro,whale_presence~DMI+(1|year),family='binomial',weights = nw_macro$nb_recording_hrs)
+summary(glm)
+
+glm <- glmer(data=nw_macro,whale_presence~SOI+(1|year),family='binomial',weights = nw_macro$nb_recording_hrs)
+summary(glm)
+
+glm <- glmer(data=se_macro,whale_presence~DMI+(1|year),family='binomial',weights = se_macro$nb_recording_hrs)
+summary(glm)
+
+glm <- glmer(data=se_macro,whale_presence~SOI+(1|year),family='binomial',weights = se_macro$nb_recording_hrs)
+summary(glm)
+```
+
+```{r}
+dettimeseries<-ts(nw_macro$whale_presence)
+plot.ts(dettimeseries)
+
+dettimeseries<-ts(nw_macro$SOI) 
+plot.ts(dettimeseries)
+
+plot(nw_macro$SOI,nw_macro$DMI)
+```
+
+
+

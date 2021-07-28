@@ -1,0 +1,132 @@
+---
+title: "Results"
+author: "Lyra"
+date: "07/04/2021"
+output: html_document
+---
+
+```{r}
+library(lubridate)
+```
+
+
+```{r}
+setwd("~/Documents/GitHub/DGwhale/My data/data summary")
+nw<-read.csv("nw_complete.csv")[,-1]
+se<-read.csv("se_complete.csv")[,-1]
+
+```
+
+```{r}
+setwd("~/Documents/GitHub/DGwhale/My data/data summary")
+nw_year<-read.csv("summary-nw.csv")
+se_year<-read.csv("summary-se.csv")
+```
+
+
+this is to calculate efficient periods
+```{r}
+sum(nw$record_total_hrs)
+sum(se$record_total_hrs)
+
+598-sum(nw$record_total_hrs<192*0.7)
+783-sum(se$record_total_hrs<192*0.7)
+
+(598-sum(nw$record_total_hrs<192*0.7))/598
+(783-sum(se$record_total_hrs<192*0.7))/783
+
+```
+
+checking if number of calls is significantly different on the se and nw (8-day)
+```{r}
+x=nw$whale_presence
+y=se$whale_presence[1:598]
+wilcox.test(x,y,period=TRUE)
+```
+
+Checking if number of calls is significantly different on the se and nw (year)
+```{r}
+x=as.numeric(nw_year$ave.call.per.day)
+y=as.numeric(se_year$ave.call.per.day[1:13])
+wilcox.test(x,y)
+```
+
+spearman's rank coefficient for average call per day at each site
+
+```{r}
+corr <- cor.test(x=nw_year$X, y=nw_year$ave.call.per.day, method = 'spearman')
+corr
+
+corr <- cor.test(x=se_year$X, y=se_year$ave.call.per.day, method = 'spearman')
+corr
+```
+
+```{r}
+lm_se<-lm(ave.call.per.day~X,data=se_year)
+summary(lm_se)
+
+lm_nw<-lm(ave.call.per.day~X,data=nw_year)
+summary(lm_nw)
+
+lm_se<-lm(log(ave.call.per.day)~X,data=se_year)
+summary(lm_se)
+
+lm_nw<-lm(log(ave.call.per.day)~X,data=nw_year)
+summary(lm_nw)
+```
+
+
+spearman's rank coefficient for mean sst, min sst, chl-a day at each site
+
+```{r}
+corr <- cor.test(x=nw_year$X, y=nw_year$Average.SST, method = 'spearman')
+corr
+
+corr <- cor.test(x=se_year$X, y=se_year$Average.SST, method = 'spearman')
+corr
+
+
+corr <- cor.test(x=nw_year$X, y=nw_year$Min.SST, method = 'spearman')
+corr
+
+corr <- cor.test(x=se_year$X, y=se_year$Min.SST, method = 'spearman')
+corr
+
+corr <- cor.test(x=nw_year$X, y=nw_year$Avearge.chl.a, method = 'spearman')
+corr
+
+corr <- cor.test(x=se_year$X, y=se_year$Avearge.chl.a, method = 'spearman')
+corr
+```
+
+
+SE peak times
+```{r}
+SE_start<-as.Date(c("25/5/02","6/9/03","28/7/05","14/9/06","20/7/09","6/9/10","26/6/11","11/7/12","25/5/13","28/7/14","25/5/15","17/6/16","17/5/17"),"%d/%m/%y")
+SE_starty<-as.data.frame(cbind(year=format(SE_start,"%Y"),julian=format(SE_start, "%j")))
+SE_starty$year<-as.numeric(SE_starty$year)
+SE_starty$julian<-as.numeric(SE_starty$julian)
+corr<-cor.test(x=SE_starty$year, y=SE_starty$julian, method = 'spearman')
+corr
+plot(SE_starty$julian)
+
+```
+
+NW peak times
+
+
+```{r}
+NW_start<-as.Date(c("11/12/02","24/10/03","25/11/07","3/12/09","24/10/11","13/10/12","25/11/13"),"%d/%m/%y")
+NW_starty<-as.data.frame(cbind(year=format(NW_start,"%Y"),julian=format(NW_start, "%j")))
+NW_starty$year<-as.numeric(NW_starty$year)
+NW_starty$julian<-as.numeric(NW_starty$julian)
+corr<-cor.test(x=NW_starty$year, y=NW_starty$julian, method = 'spearman')
+corr
+plot(NW_starty$julian)
+
+```
+
+
+
+
+

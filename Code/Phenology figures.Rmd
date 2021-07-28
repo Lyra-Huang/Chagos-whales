@@ -1,0 +1,48 @@
+---
+title: "Phenology figures"
+author: "Lyra"
+date: "07/06/2021"
+output: html_document
+---
+
+```{r}
+library(ggplot2)
+```
+
+
+```{r}
+nw<-read.csv("nw_complete.csv")[,-c(1,3)]
+se<-read.csv("se_complete.csv")[,-c(1,3)]
+nw$bin<-rep(c(1:46))
+nw<-nw[-c(561:598),]
+nw$date<-as.Date(nw$date)
+nw$whale_presence<-nw$presence_total_hrs/nw$record_total_hrs
+summary(nw)
+```
+
+
+
+```{r}
+nw_year<-subset(nw,year==2002)
+
+dateRanges <- data.frame(
+  start = seq(as.Date("2002-02-01"), as.Date("2002-12-01"), "2 month"),
+  end = seq(as.Date("2002-03-01"), as.Date("2003-01-01"), "2 month")
+)
+
+ggplot(data=nw_year, aes(x=date, y=whale_presence)) +
+  geom_rect(data = dateRanges, aes(xmin = start , xmax = end, ymin = -Inf, ymax = Inf),
+            inherit.aes=FALSE, alpha = 0.4, fill = c("lightgrey"))+
+  geom_bar(stat="identity", position = "identity", fill="dark red") +
+        theme_bw() + 
+        theme(panel.border = element_blank(), panel.grid.major.x = element_blank(), 
+                           panel.grid.major.y = element_line(colour = "grey"), 
+                           panel.grid.minor = element_blank(), axis.line = element_line(colour = "grey")) +
+        labs(x="Date", y="Whale presence") + 
+        #scale_x_date(breaks="1 months") +
+        theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+
+
+```
+
